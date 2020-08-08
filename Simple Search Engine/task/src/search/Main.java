@@ -1,12 +1,14 @@
 package search;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        SearchEngine searchEngine = new SearchEngine();
+        SearchEngine searchEngine = new SearchEngine(args);
 
         while (searchEngine.acceptingInput) {
             if(scanner.hasNext()) {
@@ -26,6 +28,26 @@ class SearchEngine {
 
     public SearchEngine() {
         promptNumAnimals();
+    }
+
+    public SearchEngine(String[] args) {
+        if (args.length > 1 && args[0].equals("--data")) {
+            importDataFromFile(args[1]);
+            promptMenu();
+        } else {
+            System.out.println("Invalid command line arguments. Enter data manually.");
+            promptNumAnimals();
+        }
+    }
+
+    private void importDataFromFile(String arg) {
+        try (Scanner scanner = new Scanner(new File(arg))) {
+            while (scanner.hasNext()) {
+                animals.add(scanner.nextLine());
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Data file not found: " + arg);
+        }
     }
 
     public void processInput(String input) {
@@ -127,7 +149,6 @@ class SearchEngine {
             }
         }
         if (foundAnimals.size() > 0) {
-            System.out.println("\nFound animal:");
             for (String animal : foundAnimals) {
                 System.out.println(animal);
             }
