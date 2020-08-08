@@ -55,6 +55,8 @@ topics:
     theory_id: 6865
   - title: Computer algorithms
     theory_id: 4953
+  - title: Introducing the first algorithm
+    theory_id: 10336
   - title: The big O notation
     theory_id: 4991
   - title: Linear search
@@ -146,12 +148,12 @@ topics:
   4:
   - title: Immutability
     theory_id: 7929
-  - title: Data structures
-    theory_id: 5161
   - title: Pseudocode basics
     theory_id: 8228
   - title: Complex constructions in pseudocode
     theory_id: 8233
+  - title: Data structures
+    theory_id: 5161
   - title: Fixed-size array
     theory_id: 7255
   - title: Dynamic array
