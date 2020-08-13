@@ -3,6 +3,8 @@ package search;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
@@ -23,6 +25,7 @@ enum QueryState {NUMBER_OF_ANIMALS, ANIMAL_ENTRY, MENU_OPTIONS, DATA_TO_FIND}
 class SearchEngine {
     QueryState queryState = QueryState.NUMBER_OF_ANIMALS;
     ArrayList<String> animals = new ArrayList<>();
+    Map<String, ArrayList<Integer>> animalMap = new HashMap<>();
     boolean acceptingInput = true;
     int inputCount = 0;
 
@@ -47,6 +50,21 @@ class SearchEngine {
             }
         } catch (FileNotFoundException e) {
             System.out.println("Data file not found: " + arg);
+        }
+
+        generateDataMap();
+    }
+
+    private void generateDataMap() {
+        for (int i = 0; i < animals.size(); i++) {
+            String[] list = animals.get(i).split("\\s");
+            for (int j = 0; j < list.length; j++) {
+                String wordKey = list[j].toLowerCase();
+                if (!animalMap.containsKey(wordKey)) {
+                    animalMap.put(wordKey, new ArrayList<>());
+                }
+                animalMap.get(wordKey).add(i);
+            }
         }
     }
 
@@ -142,15 +160,11 @@ class SearchEngine {
     }
 
     private void searchForAnimal(String input) {
-        ArrayList<String> foundAnimals = new ArrayList<String>();
-        for (String animal : animals) {
-            if (animal.toLowerCase().contains(input.toLowerCase())) {
-                foundAnimals.add(animal);
-            }
-        }
-        if (foundAnimals.size() > 0) {
-            for (String animal : foundAnimals) {
-                System.out.println(animal);
+        // search inverted index map for search term
+        input = input.toLowerCase();
+        if (animalMap.containsKey(input)) {
+            for (Integer index : animalMap.get(input)) { // array of indexes
+                System.out.println(animals.get(index));
             }
         } else {
             System.out.println("No matching animal found.");
