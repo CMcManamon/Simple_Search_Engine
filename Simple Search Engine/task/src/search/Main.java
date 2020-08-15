@@ -27,10 +27,6 @@ class SearchEngine {
     boolean acceptingInput = true;
     int inputCount = 0;
 
-    public SearchEngine() {
-        promptNumAnimals();
-    }
-
     public SearchEngine(String[] args) {
         if (args.length > 1 && args[0].equals("--data")) {
             importDataFromFile(args[1]);
@@ -69,8 +65,7 @@ class SearchEngine {
     public void processInput(String input) {
         switch (queryState) {
             case NUMBER_OF_ANIMALS:
-                inputCount = stringToNumAnimals(input);
-                promptEnterAnimals();
+                setNumAnimals(input);
                 break;
             case ANIMAL_ENTRY:
                 enterAnimal(input);
@@ -86,6 +81,16 @@ class SearchEngine {
                 break;
             default:
                 break;
+        }
+    }
+
+    private void setNumAnimals(String input) {
+        inputCount = stringToNumAnimals(input);
+        if (inputCount <= 0) {
+            System.out.println("Must input at least 1 animal");
+            promptNumAnimals();
+        } else {
+            promptEnterAnimals();
         }
     }
 
@@ -135,13 +140,9 @@ class SearchEngine {
         }
         if (inputCount <= 0) {
             inputCount = 0;
+            generateDataMap();
             promptMenu();
         }
-    }
-
-    private void promptEnterAnimals() {
-        queryState = QueryState.ANIMAL_ENTRY;
-        System.out.println("Enter all animals:");
     }
 
     private void processMenuOption(String input) {
@@ -171,6 +172,7 @@ class SearchEngine {
         promptMenu();
     }
 
+    /* PROMPTS */
     private void promptMenu() {
         queryState = QueryState.MENU_OPTIONS;
         System.out.println("\n=== Menu ===" +
@@ -195,27 +197,23 @@ class SearchEngine {
         System.out.println("\nSelect a matching strategy: ALL, ANY, NONE");
     }
 
-    private int stringToNumAnimals(String input) {
-        return Integer.parseInt(input); // ToDo: exception check
+    private void promptEnterAnimals() {
+        queryState = QueryState.ANIMAL_ENTRY;
+        System.out.println("Enter all animals:");
     }
 
-    private void searchForAnimal(String input) {
-        // search inverted index map for search term
-        input = input.toLowerCase();
-        if (animalMap.containsKey(input)) {
-            for (Integer index : animalMap.get(input)) { // array of indexes
-                System.out.println(animals.get(index));
-            }
-        } else {
-            System.out.println("No matching animal found.");
+    private Integer stringToNumAnimals(String input) {
+        try {
+            return Integer.parseInt(input);
+        } catch(NumberFormatException e) {
+            return 0;
         }
     }
+
 } // end SearchEngine class
 
 
 // Search Methods
-enum SearchStrategy {ALL, ANY, NONE}
-
 interface SearchMethod {
     Set<Integer> find(Collection<String> targets, Map<String, ArrayList<Integer>> database);
 }
