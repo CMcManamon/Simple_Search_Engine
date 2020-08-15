@@ -2,8 +2,7 @@ package search;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -18,11 +17,13 @@ public class Main {
     }
 }
 
-enum QueryState {NUMBER_OF_ANIMALS, ANIMAL_ENTRY, MENU_OPTIONS, DATA_TO_FIND}
+enum QueryState {NUMBER_OF_ANIMALS, ANIMAL_ENTRY, MENU_OPTIONS, SELECT_STRATEGY, DATA_TO_FIND}
 
 class SearchEngine {
     QueryState queryState = QueryState.NUMBER_OF_ANIMALS;
     ArrayList<String> animals = new ArrayList<>();
+    Map<String, ArrayList<Integer>> animalMap = new HashMap<>();
+    SearchMethod searchMethod;
     boolean acceptingInput = true;
     int inputCount = 0;
 
@@ -48,6 +49,21 @@ class SearchEngine {
         } catch (FileNotFoundException e) {
             System.out.println("Data file not found: " + arg);
         }
+
+        generateDataMap();
+    }
+
+    private void generateDataMap() {
+        for (int i = 0; i < animals.size(); i++) {
+            String[] list = animals.get(i).split("\\s");
+            for (int j = 0; j < list.length; j++) {
+                String wordKey = list[j].toLowerCase();
+                if (!animalMap.containsKey(wordKey)) {
+                    animalMap.put(wordKey, new ArrayList<>());
+                }
+                animalMap.get(wordKey).add(i);
+            }
+        }
     }
 
     public void processInput(String input) {
@@ -62,6 +78,9 @@ class SearchEngine {
             case MENU_OPTIONS:
                 processMenuOption(input);
                 break;
+            case SELECT_STRATEGY:
+                setStrategy(input);
+                break;
             case DATA_TO_FIND:
                 processSearchQuery(input);
                 break;
@@ -70,9 +89,43 @@ class SearchEngine {
         }
     }
 
+    private void setStrategy(String input) {
+        switch (input.toUpperCase()) {
+            case "ALL":
+                searchMethod = new searchAll();
+                break;
+            case "ANY":
+                searchMethod = new searchAny();
+                break;
+            case "NONE":
+                searchMethod = new searchNone();
+                break;
+            default:
+                System.out.println("Invalid matching strategy: " + input);
+                promptSelectStrategy();
+                return;
+        }
+        promptQuery();
+    }
+
     private void processSearchQuery(String input) {
-            searchForAnimal(input);
-            promptMenu();
+        // break the query into terms
+        List<String> terms = new ArrayList(Arrays.asList(input.toLowerCase().split("\\s")));
+
+        // apply search method to get indexes that match the search pattern
+        Set<Integer> results = searchMethod.find(terms, animalMap);
+
+        // print results
+        if (results.isEmpty()) {
+            System.out.println("No matches found");
+        } else {
+            for (Integer i : results) {
+                System.out.println(animals.get(i));
+            }
+        }
+
+        // return to menu
+        promptMenu();
     }
 
     private void enterAnimal(String input) {
@@ -94,7 +147,7 @@ class SearchEngine {
     private void processMenuOption(String input) {
         switch (input) {
             case "1":
-                promptQuery();
+                promptSelectStrategy();
                 break;
             case "2":
                 printAll();
@@ -137,23 +190,89 @@ class SearchEngine {
         System.out.println("Enter the number of animals:");
     }
 
+    private void promptSelectStrategy() {
+        queryState = QueryState.SELECT_STRATEGY;
+        System.out.println("\nSelect a matching strategy: ALL, ANY, NONE");
+    }
+
     private int stringToNumAnimals(String input) {
         return Integer.parseInt(input); // ToDo: exception check
     }
 
     private void searchForAnimal(String input) {
-        ArrayList<String> foundAnimals = new ArrayList<String>();
-        for (String animal : animals) {
-            if (animal.toLowerCase().contains(input.toLowerCase())) {
-                foundAnimals.add(animal);
-            }
-        }
-        if (foundAnimals.size() > 0) {
-            for (String animal : foundAnimals) {
-                System.out.println(animal);
+        // search inverted index map for search term
+        input = input.toLowerCase();
+        if (animalMap.containsKey(input)) {
+            for (Integer index : animalMap.get(input)) { // array of indexes
+                System.out.println(animals.get(index));
             }
         } else {
             System.out.println("No matching animal found.");
         }
     }
+} // end SearchEngine class
+
+
+// Search Methods
+enum SearchStrategy {ALL, ANY, NONE}
+
+interface SearchMethod {
+    Set<Integer> find(Collection<String> targets, Map<String, ArrayList<Integer>> database);
 }
+
+class searchAny implements SearchMethod {
+    @Override
+    public Set<Integer> find(Collection<String> targets, Map<String, ArrayList<Integer>> database) {
+        Set<Integer> results = new TreeSet<>();
+        for (String target : targets) {
+            if (database.containsKey(target)) {
+                for (Integer n : database.get(target)) {
+                    results.add(n);
+                }
+            }
+        }
+
+        return results;
+    }
+}
+
+class searchAll implements SearchMethod {
+    @Override
+    public Set<Integer> find(Collection<String> targets, Map<String, ArrayList<Integer>> database) {
+        Set<Integer> results = new TreeSet<>();
+        ArrayList<ArrayList<Integer>> matches = new ArrayList<>();
+        for (String target : targets) {
+            if (database.containsKey(target)) {
+                matches.add(database.get(target));
+            }
+        }
+
+        if (!matches.isEmpty()) {
+            results.addAll(matches.get(0)); // add the first set of matches to the set
+            for (ArrayList match : matches) {
+                results.retainAll(match); // keep all shared matches
+            }
+        }
+
+        return results;
+    }
+}
+
+class searchNone implements SearchMethod {
+    @Override public Set<Integer> find(Collection<String> targets, Map<String, ArrayList<Integer>> database) {
+        Set<Integer> results = new TreeSet<>();
+        for (ArrayList<Integer> c : database.values()) { // fill the set with all possible values
+            results.addAll(c);
+        }
+
+        for (String target : targets) {
+            if (database.containsKey(target)) {
+                results.removeAll(database.get(target));
+            }
+        }
+
+        return results;
+    }
+}
+
+

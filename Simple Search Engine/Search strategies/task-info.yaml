@@ -16,7 +16,8 @@ files:
   visible: false
   text: |
     public class SearchEngineTests {
-        public static final String NAMES = "Kristofer Galley\n" +
+        public static final String NAMES =
+            "Kristofer Galley\n" +
             "Fernando Marbury fernando_marbury@gmail.com\n" +
             "Kristyn Nix nix-kris@gmail.com\n" +
             "Regenia Enderle\n" +
@@ -327,5 +328,9 @@ files:
     }
   learner_created: false
 feedback_link: https://hyperskill.org/projects/66/stages/359/implement
-status: Unchecked
+status: Solved
+feedback:
+  message: Congratulations! Continue on <a href="https://hyperskill.org/projects/66/stages/359/implement">JetBrains
+    Academy</a>
+  time: Sat, 15 Aug 2020 05:15:46 UTC
 record: -1

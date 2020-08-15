@@ -13,7 +13,7 @@ files:
     }
   learner_created: false
 - name: test/SearchEngineTests.java
-  visible: false
+  visible: true
   text: |
     public class SearchEngineTests {
         public static final String NAMES =
@@ -297,5 +297,5 @@ files:
 
   learner_created: false
 feedback_link: https://hyperskill.org/projects/66/stages/358/implement
-status: Unchecked
-record: -1
+status: Solved
+record: 5
